@@ -123,9 +123,22 @@ int main(void)
             if (status == 0) printf("Other connection closed");
             if (status == -1) perror("recv");
             printf("%s", str);
-            if (send(new_fd, "Hello, world!", 13, 0) == -1)
+
+	    // send file named index.html whenever we get a request
+	    FILE* home_pg = fopen("index.html", "r");
+	    fseek(home_pg, 0L, SEEK_END);
+	    int size = ftell(home_pg);
+	    char* buffer = (char*)calloc(size, sizeof(char));
+	    if (buffer == NULL)
+	    	return 1;
+
+            fread(buffer, sizeof(char), size, home_pg);
+	    fclose(home_pg);
+
+            if (send(new_fd, buffer, size, 0) == -1)
                 perror("send");
-            close(new_fd);
+            
+	    close(new_fd);
             exit(0);
         }
         close(new_fd);  // parent doesn't need this
